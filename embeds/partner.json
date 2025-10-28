@@ -2,21 +2,24 @@
   "color": 255,
   "title": "SKRIME",
   "image": {
-    "url": "https://github.com/MythicStudios/discord-bot/blob/main/public/images/skrime-logo-primary.png"
+    "url": "https://raw.githubusercontent.com/MythicStudios/discord-bot/main/public/images/skrime-logo-primary.png"
   },
   "description": "Dein Partner für kostengünstige Web-Hosting Produkte sowie shared als auch dedizierte Server.",
   "fields": [
     {
-      "name": "Website",
+      "name": "Website:",
       "value": "https://skrime.eu",
-      "inline": true
+      "inline": false
     },
     {
-      "name": "Discord",
+      "name": "Discord:",
       "value": "https://skri.me/discord",
-      "inline": true
+      "inline": false
     }
   ],
+  "thumbnail": {
+    "url": "https://raw.githubusercontent.com/MythicStudios/discord-bot/main/public/images/skrime-icon-primary.png"
+  },
   "footer": {
     "text": "Qualitätiges Hosting zum günstigen Preis!"
   }

@@ -14,14 +14,14 @@ module.exports = {
     try {
       const deleted = await message.channel.bulkDelete(amount, true);
 
-      const confirmMsg = await message.reply(
+      const confirmMsg = await message.channel.send(
         `✓ ${deleted.size} messages deleted!`
       );
 
       setTimeout(() => confirmMsg.delete(), 3000);
     } catch (error) {
       console.error('Error deleting messages:', error);
-      message.reply('There was an error deleting messages!');
+      message.channel.send('There was an error deleting messages!');
     }
   },
 };

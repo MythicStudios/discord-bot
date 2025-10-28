@@ -1,0 +1,18 @@
+{
+  "color": 255,
+  "title": "Mythic Studios - Rules",
+  "description": "Willkommen bei Mythic Studios! Bitte nimm dir einen Moment Zeit, um unsere Regeln zu lesen und ein respektvolles Miteinander zu fördern.",
+  "fields": [
+    {
+      "name": "Rules:",
+      "value": "https://mythic-studios.net/discord/rules",
+      "inline": false
+    }
+  ],
+  "thumbnail": {
+    "url": "https://raw.githubusercontent.com/MythicStudios/discord-bot/main/public/images/logo.png"
+  },
+  "footer": {
+    "text": "Please follow the rules to ensure a friendly community experience."
+  }
+}

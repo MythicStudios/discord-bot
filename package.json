@@ -1,0 +1,13 @@
+{
+  "name": "mythic-studios",
+  "version": "1.0.0",
+  "description": "The Discord bot for the Mythic Studios Discord server.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1"
+  }
+}

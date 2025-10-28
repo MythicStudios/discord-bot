@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+const db = require('./database/db');
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,

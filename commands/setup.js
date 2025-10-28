@@ -1,16 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const configPath = path.join(__dirname, '../config/servers.json');
-const configDir = path.dirname(configPath);
-
-if (!fs.existsSync(configDir)) {
-  fs.mkdirSync(configDir, { recursive: true });
-}
-
-if (!fs.existsSync(configPath)) {
-  fs.writeFileSync(configPath, '{}');
-}
+const db = require('../database/db');
 
 module.exports = {
   name: 'setup',
@@ -28,17 +16,19 @@ module.exports = {
         return message.reply('Please mention a channel! Example: !setup logs #logs');
       }
 
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-
-      if (!config[message.guild.id]) {
-        config[message.guild.id] = {};
-      }
-
-      config[message.guild.id].logsChannel = channel.id;
-
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-
-      message.reply(`✓ Logs channel set to ${channel}`);
+      db.run(
+        `INSERT OR REPLACE INTO logs_channels (guildId, channelId)
+         VALUES (?, ?)`,
+        [message.guild.id, channel.id],
+        (err) => {
+          if (err) {
+            console.error('Database error:', err);
+            message.reply('There was an error setting the logs channel!');
+          } else {
+            message.reply(`✓ Logs channel set to ${channel}`);
+          }
+        }
+      );
     } else {
       message.reply('Available subcommands: !setup logs <#channel>');
     }

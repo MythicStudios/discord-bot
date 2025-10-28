@@ -1,13 +1,5 @@
-const fs = require('fs');
-const path = require('path');
 const timeParser = require('../utils/timeParser');
-
-const configPath = path.join(__dirname, '../config/servers.json');
-const mutesPath = path.join(__dirname, '../config/mutes.json');
-
-if (!fs.existsSync(mutesPath)) {
-  fs.writeFileSync(mutesPath, '{}');
-}
+const db = require('../database/db');
 
 module.exports = {
   name: 'mute',
@@ -38,61 +30,65 @@ module.exports = {
 
       await member.timeout(duration, reason);
 
-      const mutes = JSON.parse(fs.readFileSync(mutesPath, 'utf8'));
-      if (!mutes[message.guild.id]) {
-        mutes[message.guild.id] = {};
-      }
+      const mutedAt = new Date().getTime();
+      const unmuteAt = mutedAt + duration;
 
-      mutes[message.guild.id][user.id] = {
-        mutedAt: new Date().getTime(),
-        unmuteAt: new Date().getTime() + duration,
-        reason,
-      };
-
-      fs.writeFileSync(mutesPath, JSON.stringify(mutes, null, 2));
-
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      const guildConfig = config[message.guild.id];
-
-      if (guildConfig && guildConfig.logsChannel) {
-        const logsChannel = message.guild.channels.cache.get(guildConfig.logsChannel);
-
-        if (logsChannel) {
-          const muteEmbed = {
-            color: 0xFFFF00,
-            title: 'Member Muted',
-            fields: [
-              {
-                name: 'Member',
-                value: `${user.tag} (${user.id})`,
-                inline: false,
-              },
-              {
-                name: 'Duration',
-                value: timeArg,
-                inline: false,
-              },
-              {
-                name: 'Reason',
-                value: reason,
-                inline: false,
-              },
-              {
-                name: 'Muted By',
-                value: `${message.author.tag}`,
-                inline: false,
-              },
-              {
-                name: 'Date',
-                value: new Date().toLocaleString(),
-                inline: false,
-              },
-            ],
-          };
-
-          logsChannel.send({ embeds: [muteEmbed] });
+      db.run(
+        `INSERT OR REPLACE INTO mutes (guildId, userId, mutedAt, unmuteAt, reason, mutedBy)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [message.guild.id, user.id, mutedAt, unmuteAt, reason, message.author.id],
+        (err) => {
+          if (err) console.error('Database error:', err);
         }
-      }
+      );
+
+      db.get(
+        `SELECT channelId FROM logs_channels WHERE guildId = ?`,
+        [message.guild.id],
+        (err, row) => {
+          if (err) console.error('Database error:', err);
+
+          if (row) {
+            const logsChannel = message.guild.channels.cache.get(row.channelId);
+
+            if (logsChannel) {
+              const muteEmbed = {
+                color: 0xFFFF00,
+                title: 'Member Muted',
+                fields: [
+                  {
+                    name: 'Member',
+                    value: `${user.tag} (${user.id})`,
+                    inline: false,
+                  },
+                  {
+                    name: 'Duration',
+                    value: timeArg,
+                    inline: false,
+                  },
+                  {
+                    name: 'Reason',
+                    value: reason,
+                    inline: false,
+                  },
+                  {
+                    name: 'Muted By',
+                    value: `${message.author.tag}`,
+                    inline: false,
+                  },
+                  {
+                    name: 'Date',
+                    value: new Date().toLocaleString(),
+                    inline: false,
+                  },
+                ],
+              };
+
+              logsChannel.send({ embeds: [muteEmbed] });
+            }
+          }
+        }
+      );
 
       message.reply(`✓ ${user.tag} has been muted for ${timeArg}. Reason: ${reason}`);
     } catch (error) {

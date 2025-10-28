@@ -1,8 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-
-const configPath = path.join(__dirname, '../config/servers.json');
-const mutesPath = path.join(__dirname, '../config/mutes.json');
+const db = require('../database/db');
 
 module.exports = {
   name: 'unmute',
@@ -21,44 +17,51 @@ module.exports = {
 
       await member.timeout(null);
 
-      const mutes = JSON.parse(fs.readFileSync(mutesPath, 'utf8'));
-      if (mutes[message.guild.id] && mutes[message.guild.id][user.id]) {
-        delete mutes[message.guild.id][user.id];
-        fs.writeFileSync(mutesPath, JSON.stringify(mutes, null, 2));
-      }
-
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      const guildConfig = config[message.guild.id];
-
-      if (guildConfig && guildConfig.logsChannel) {
-        const logsChannel = message.guild.channels.cache.get(guildConfig.logsChannel);
-
-        if (logsChannel) {
-          const unmuteEmbed = {
-            color: 0x00FF00,
-            title: 'Member Unmuted',
-            fields: [
-              {
-                name: 'Member',
-                value: `${user.tag} (${user.id})`,
-                inline: false,
-              },
-              {
-                name: 'Unmuted By',
-                value: `${message.author.tag}`,
-                inline: false,
-              },
-              {
-                name: 'Date',
-                value: new Date().toLocaleString(),
-                inline: false,
-              },
-            ],
-          };
-
-          logsChannel.send({ embeds: [unmuteEmbed] });
+      db.run(
+        `DELETE FROM mutes WHERE guildId = ? AND userId = ?`,
+        [message.guild.id, user.id],
+        (err) => {
+          if (err) console.error('Database error:', err);
         }
-      }
+      );
+
+      db.get(
+        `SELECT channelId FROM logs_channels WHERE guildId = ?`,
+        [message.guild.id],
+        (err, row) => {
+          if (err) console.error('Database error:', err);
+
+          if (row) {
+            const logsChannel = message.guild.channels.cache.get(row.channelId);
+
+            if (logsChannel) {
+              const unmuteEmbed = {
+                color: 0x00FF00,
+                title: 'Member Unmuted',
+                fields: [
+                  {
+                    name: 'Member',
+                    value: `${user.tag} (${user.id})`,
+                    inline: false,
+                  },
+                  {
+                    name: 'Unmuted By',
+                    value: `${message.author.tag}`,
+                    inline: false,
+                  },
+                  {
+                    name: 'Date',
+                    value: new Date().toLocaleString(),
+                    inline: false,
+                  },
+                ],
+              };
+
+              logsChannel.send({ embeds: [unmuteEmbed] });
+            }
+          }
+        }
+      );
 
       message.reply(`✓ ${user.tag} has been unmuted!`);
     } catch (error) {
